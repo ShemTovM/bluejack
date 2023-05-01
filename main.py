@@ -1,27 +1,35 @@
-import bluetooth
+import asyncio
+from bleak import BleakScanner, BleakClient
 
-# Get a list of already paired devices
-paired_devices = bluetooth.discover_devices()
 
-# Print the list of paired devices
-for device_addr in paired_devices:
-    device_name = bluetooth.lookup_name(device_addr)
-    print(f"Found device: {device_name} ({device_addr})")
+async def connect_to_device(device_address):
+    async with BleakClient(device_address) as client:
+        # Connection successful, do something with the client
+        print(f"Connected to {device_address}")
 
-# Connect to a specific device by address
-target_device = "<device_address>"  # Replace with the address of the device you want to connect to
+        # Read/write/subscribe to characteristics or perform other operations
 
-if target_device in paired_devices:
-    try:
-        socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        socket.connect((target_device, 1))  # Use the appropriate port number for your device
+        # Disconnect when done
+        await client.disconnect()
+        print(f"Disconnected from {device_address}")
 
-        # Connection successful, do something with the socket
 
-        # Close the socket when done
-        socket.close()
+async def main():
+    scanner = BleakScanner()
+    devices = await scanner.discover()
 
-    except bluetooth.BluetoothError as e:
-        print(f"Error occurred while connecting: {str(e)}")
-else:
-    print("Device not found in paired devices.")
+    # Print the list of discovered devices
+    for device in devices:
+        print(f"Found device: {device}")
+
+    # Connect to a specific device by address
+    target_device_address = "<device_address>"  # Replace with the address of the device you want to connect to
+
+    if target_device_address in devices:
+        await connect_to_device(target_device_address)
+    else:
+        print("Device not found")
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
